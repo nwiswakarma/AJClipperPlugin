@@ -1,0 +1,21 @@
+{
+	"PluginFileVersion" : 1,
+
+	"FriendlyName" : "AJ Clipper Plugin",
+	"Version" : 1,
+	"VersionName" : "1.0.0",
+	"CreatedBy" : "", 
+	"CreatedByURL" : "",
+	"Description" : "",
+	"Category" : "Rendering.AJClipperPlugin",
+	"EnabledByDefault" : true,
+	"Modules" :
+	[		
+		{
+			"Name" : "AJClipperPlugin",
+			"Type" : "Runtime",
+			"LoadingPhase" : "Default",
+			"WhitelistPlatforms" : [ "Win64", "Win32", "Mac" ]
+		}
+	]
+}
