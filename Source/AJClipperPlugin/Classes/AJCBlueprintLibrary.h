@@ -113,3 +113,23 @@ public:
     UFUNCTION(BlueprintCallable)
     static int32 IsPointOnPolygons(const FVector2D& Point, const FAJCPathsRef& InPaths);
 };
+
+UCLASS(BlueprintType, Blueprintable)
+class AJCLIPPERPLUGIN_API UAJCPathObject : public UObject
+{
+	GENERATED_BODY()
+
+public:
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
+    TArray<FAJCVectorPathRef> Paths;
+
+    UFUNCTION(BlueprintCallable)
+    void VectorPathOffsetClip(
+        const FAJCVectorPathRef& VectorPath,
+        const FAJCOffsetClipperConfig& Config,
+        EAJCJoinType JoinType,
+        EAJCEndType EndType,
+        bool bSimplifyPath = true
+        );
+};

@@ -232,3 +232,9 @@ int32 UAJCBlueprintLibrary::IsPointOnPolygons(const FVector2D& Point, const FAJC
 
     return 0;
 }
+
+void UAJCPathObject::VectorPathOffsetClip(const FAJCVectorPathRef& VectorPath, const FAJCOffsetClipperConfig& Config, EAJCJoinType JoinType, EAJCEndType EndType, bool bSimplifyPath)
+{
+    Paths.Reset();
+    Paths = UAJCBlueprintLibrary::VectorPathOffsetClip(VectorPath, Config, JoinType, EndType, bSimplifyPath);
+}
