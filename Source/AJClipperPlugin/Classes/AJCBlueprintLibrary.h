@@ -64,7 +64,7 @@ public:
     static void ConvertVectorPathToPointPath(const FAJCVectorPathRef& VectorPath, FAJCPathRef& OutPath);
 
     UFUNCTION(BlueprintCallable)
-    static TArray<FAJCVectorPathRef> ConvertPointPathsToVectorPaths1(const FAJCPathsRef& PointPaths);
+    static TArray<FAJCVectorPathRef> ConvertPointPathsToVectorPaths(const FAJCPathsRef& PointPaths);
 
     UFUNCTION(BlueprintCallable)
     static void CreateVectorPathsFromPaths(const FAJCPathsRef& InPaths, TArray<FAJCVectorPathRef>& OutPaths, bool bFlattenPaths = false);
@@ -112,6 +112,9 @@ public:
 
     UFUNCTION(BlueprintCallable)
     static int32 IsPointOnPolygons(const FVector2D& Point, const FAJCPathsRef& InPaths);
+
+    UFUNCTION(BlueprintCallable)
+    static int32 FindLargestVectorPath(const TArray<FAJCVectorPathRef>& VectorPaths);
 };
 
 UCLASS(BlueprintType, Blueprintable)

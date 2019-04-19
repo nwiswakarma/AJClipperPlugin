@@ -96,4 +96,6 @@ public:
 
     static int32 IsPointOnPolygon(const FVector2D& Point, const FAJCPointPath& InPath);
     static int32 IsPointOnPolygons(const FVector2D& Point, const FAJCPointPaths& InPaths);
+
+    static float GetVectorPathArea(const FAJCVectorPathRef& VectorPath);
 };

@@ -38,7 +38,7 @@ void UAJCBlueprintLibrary::ConvertVectorPathToPointPath(const FAJCVectorPathRef&
     FAJCUtilityLibrary::ConvertVectorPathToPointPath(VectorPath.Data, OutPath);
 }
 
-TArray<FAJCVectorPathRef> UAJCBlueprintLibrary::ConvertPointPathsToVectorPaths1(const FAJCPathsRef& PathsRef)
+TArray<FAJCVectorPathRef> UAJCBlueprintLibrary::ConvertPointPathsToVectorPaths(const FAJCPathsRef& PathsRef)
 {
     TArray<FAJCVectorPathRef> OutPaths;
     FAJCUtilityLibrary::ConvertPointPathsToVectorPaths(PathsRef.Data, OutPaths);
@@ -231,6 +231,26 @@ int32 UAJCBlueprintLibrary::IsPointOnPolygons(const FVector2D& Point, const FAJC
     }
 
     return 0;
+}
+
+int32 UAJCBlueprintLibrary::FindLargestVectorPath(const TArray<FAJCVectorPathRef>& VectorPaths)
+{
+    int32 LargestPathIndex = -1;
+    float LargestArea = -1.f;
+
+    for (int32 i=0; i<VectorPaths.Num(); ++i)
+    {
+        const FAJCVectorPathRef& VectorPath(VectorPaths[i]);
+        const float Area = FMath::Abs(FAJCUtilityLibrary::GetVectorPathArea(VectorPath));
+
+        if (LargestArea < Area)
+        {
+            LargestPathIndex = i;
+            LargestArea = Area;
+        }
+    }
+
+    return LargestPathIndex;
 }
 
 void UAJCPathObject::VectorPathOffsetClip(const FAJCVectorPathRef& VectorPath, const FAJCOffsetClipperConfig& Config, EAJCJoinType JoinType, EAJCEndType EndType, bool bSimplifyPath)
