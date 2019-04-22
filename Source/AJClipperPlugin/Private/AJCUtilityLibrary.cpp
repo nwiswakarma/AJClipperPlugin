@@ -26,6 +26,7 @@
 //
 
 #include "AJCUtilityLibrary.h"
+#include "Poly/GULPolyUtilityLibrary.h"
 
 ClipperLib::ClipType FAJCClipperConfig::GetClipType() const
 {
@@ -149,21 +150,5 @@ int32 FAJCUtilityLibrary::IsPointOnPolygons(const FVector2D& Point, const FAJCPo
 
 float FAJCUtilityLibrary::GetVectorPathArea(const FAJCVectorPathRef& VectorPath)
 {
-    const TArray<FVector2D>& Points(VectorPath.Data);
-    int32 PointCount = Points.Num();
-    
-    if (PointCount < 3)
-    {
-        return 0.f;
-    }
-    
-    float a = 0;
-    
-    for (int32 i=0, j=PointCount-1; i<PointCount; ++i)
-    {
-      a += (Points[j].X + Points[i].X) * (Points[j].Y - Points[i].Y);
-      j = i;
-    }
-    
-    return -a * 0.5;
+    return UGULPolyUtilityLibrary::GetArea(VectorPath.Data);
 }
