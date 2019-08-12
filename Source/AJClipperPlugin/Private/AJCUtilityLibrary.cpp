@@ -75,11 +75,23 @@ void FAJCUtilityLibrary::ConvertPointPathsToVectorPaths(const FAJCPointPaths& Po
     }
 }
 
-void FAJCUtilityLibrary::Clip(const TArray<FAJCPathRef>& SubjectPathRefs, const TArray<FAJCPathRef>& ClipPathRefs, EAJCClipType ClipType, EAJCPolyFillType FillType, FAJCPointPaths& Solution)
+void FAJCUtilityLibrary::Clip(
+    FAJCPointPaths& Solution,
+    const TArray<FAJCPathRef>& SubjectPathRefs,
+    const TArray<FAJCPathRef>& ClipPathRefs,
+    EAJCClipType ClipType,
+    EAJCPolyFillType FillType,
+    bool bPreserveCollinear
+    )
 {
     using namespace ClipperLib;
 
     Clipper c;
+
+    if (bPreserveCollinear)
+    {
+        c.PreserveCollinear(true);
+    }
 
     for (int32 i=0; i<SubjectPathRefs.Num(); ++i)
     {
@@ -90,6 +102,28 @@ void FAJCUtilityLibrary::Clip(const TArray<FAJCPathRef>& SubjectPathRefs, const 
     {
         c.AddPath(ClipPathRefs[i].Data, ptClip, ClipPathRefs[i].bClosedPoly);
     }
+
+    c.Execute(GetClipType(ClipType), Solution, GetPolyFillType(FillType));
+}
+
+void FAJCUtilityLibrary::Clip(
+    FAJCPointPaths& Solution,
+    const FAJCPathRef& SubjectPathRef,
+    const FAJCPathRef& ClipPathRef,
+    EAJCClipType ClipType,
+    EAJCPolyFillType FillType,
+    bool bPreserveCollinear
+    )
+{
+    ClipperLib::Clipper c;
+
+    if (bPreserveCollinear)
+    {
+        c.PreserveCollinear(true);
+    }
+
+    c.AddPath(SubjectPathRef.Data, ClipperLib::ptSubject, SubjectPathRef.bClosedPoly);
+    c.AddPath(ClipPathRef.Data, ClipperLib::ptClip, ClipPathRef.bClosedPoly);
 
     c.Execute(GetClipType(ClipType), Solution, GetPolyFillType(FillType));
 }
@@ -135,7 +169,7 @@ int32 FAJCUtilityLibrary::IsPointOnPolygon(const FVector2D& Point, const FAJCPoi
 
 int32 FAJCUtilityLibrary::IsPointOnPolygons(const FVector2D& Point, const FAJCPointPaths& InPaths)
 {
-    for (const ClipperLib::Path& Path : InPaths)
+    for (const FAJCPointPath& Path : InPaths)
     {
         int32 Result = ClipperLib::PointInPolygon(FAJCUtils::ScaleToCIntPoint(Point), Path);
 

@@ -97,7 +97,13 @@ void UAJCBlueprintLibrary::CreatePathsFromVectorPaths(const TArray<FAJCVectorPat
     }
 }
 
-TArray<FAJCVectorPathRef> UAJCBlueprintLibrary::VectorPathClip(const TArray<FAJCVectorPathRef>& SubjectVectorPaths, const TArray<FAJCVectorPathRef>& ClipVectorPaths, EAJCClipType ClipType, EAJCPolyFillType FillType)
+void UAJCBlueprintLibrary::VectorPathClip(
+    TArray<FAJCVectorPathRef>& OutPaths,
+    const TArray<FAJCVectorPathRef>& SubjectVectorPaths,
+    const TArray<FAJCVectorPathRef>& ClipVectorPaths,
+    EAJCClipType ClipType,
+    EAJCPolyFillType FillType
+    )
 {
     TArray<FAJCPathRef> SubjectPaths;
     TArray<FAJCPathRef> ClipPaths;
@@ -118,15 +124,20 @@ TArray<FAJCVectorPathRef> UAJCBlueprintLibrary::VectorPathClip(const TArray<FAJC
     }
 
     FAJCPathsRef SolutionRef;
-    FAJCUtilityLibrary::Clip(SubjectPaths, ClipPaths, ClipType, FillType, SolutionRef.Data);
+    FAJCUtilityLibrary::Clip(SolutionRef.Data, SubjectPaths, ClipPaths, ClipType, FillType);
 
-    TArray<FAJCVectorPathRef> OutPaths;
+    OutPaths.Reset();
     FAJCUtilityLibrary::ConvertPointPathsToVectorPaths(SolutionRef.Data, OutPaths);
-
-    return MoveTemp(OutPaths);
 }
 
-TArray<FAJCVectorPathRef> UAJCBlueprintLibrary::VectorPathOffsetClip(const FAJCVectorPathRef& VectorPath, const FAJCOffsetClipperConfig& Config, EAJCJoinType JoinType, EAJCEndType EndType, bool bSimplifyPath)
+void UAJCBlueprintLibrary::VectorPathOffsetClip(
+    TArray<FAJCVectorPathRef>& OutPaths,
+    const FAJCVectorPathRef& VectorPath,
+    const FAJCOffsetClipperConfig& Config,
+    EAJCJoinType JoinType,
+    EAJCEndType EndType,
+    bool bSimplifyPath
+    )
 {
     FAJCPathRef PathRef;
     ConvertVectorPathToPointPath(VectorPath, PathRef);
@@ -137,13 +148,18 @@ TArray<FAJCVectorPathRef> UAJCBlueprintLibrary::VectorPathOffsetClip(const FAJCV
     FAJCPathsRef PathsRef;
     FAJCUtilityLibrary::OffsetClip(PathRef, Config, PathsRef.Data, bSimplifyPath);
 
-    TArray<FAJCVectorPathRef> OutPaths;
+    OutPaths.Reset();
     FAJCUtilityLibrary::ConvertPointPathsToVectorPaths(PathsRef.Data, OutPaths);
-
-    return MoveTemp(OutPaths);
 }
 
-TArray<FAJCVectorPathRef> UAJCBlueprintLibrary::VectorPathClipByOffset(const FAJCVectorPathRef& VectorPath, const FAJCOffsetClipperConfig& Config, EAJCJoinType JoinType, EAJCEndType EndType, bool bSimplifyPath)
+void UAJCBlueprintLibrary::VectorPathClipByOffset(
+    TArray<FAJCVectorPathRef>& OutPaths,
+    const FAJCVectorPathRef& VectorPath,
+    const FAJCOffsetClipperConfig& Config,
+    EAJCJoinType JoinType,
+    EAJCEndType EndType,
+    bool bSimplifyPath
+    )
 {
     TArray<FAJCPathRef> SubjectPaths;
     TArray<FAJCPathRef> ClipPaths;
@@ -174,42 +190,25 @@ TArray<FAJCVectorPathRef> UAJCBlueprintLibrary::VectorPathClipByOffset(const FAJ
     // Clip source point path with the offset path
 
     FAJCPathsRef SolutionRef;
-    FAJCUtilityLibrary::Clip(SubjectPaths, ClipPaths, EAJCClipType::CTDifference, EAJCPolyFillType::PFTEvenOdd, SolutionRef.Data);
+    FAJCUtilityLibrary::Clip(SolutionRef.Data, SubjectPaths, ClipPaths, EAJCClipType::CTDifference, EAJCPolyFillType::PFTEvenOdd);
 
     // Convert point path results to vector paths
 
-    TArray<FAJCVectorPathRef> OutPaths;
+    OutPaths.Reset();
     FAJCUtilityLibrary::ConvertPointPathsToVectorPaths(SolutionRef.Data, OutPaths);
-
-    return MoveTemp(OutPaths);
 }
 
-void UAJCBlueprintLibrary::OffsetClip1(const FAJCPathRef& PathRef, const FAJCOffsetClipperConfig& Config, FAJCPathsRef& OutPaths)
-{
-    TArray<FAJCPathConstPtrRef> Arr({ PathRef.AsConstPtr() });
-    UAJCBlueprintLibrary::OffsetClip(Arr, Config, OutPaths);
-}
-
-void UAJCBlueprintLibrary::OffsetClip2(const FAJCPathsRef& PathsRef, const FAJCOffsetClipperConfig& Config, FAJCPathsRef& OutPaths)
+void UAJCBlueprintLibrary::OffsetClipSingle(const FAJCPathRef& PathRef, const FAJCOffsetClipperConfig& Config, FAJCPathsRef& OutPaths)
 {
     ClipperLib::ClipperOffset co(Config.MiterLimit, Config.ArcTolerance);
-    co.AddPaths(PathsRef.Data, ClipperLib::jtSquare, ClipperLib::etClosedPolygon);
+    co.AddPath(PathRef.Data, PathRef.GetJoinType(), PathRef.GetEndType());
     co.Execute(OutPaths.Data, (float)FAJCUtils::ScaleToCInt(Config.Delta));
 }
 
-void UAJCBlueprintLibrary::OffsetClip(const TArray<FAJCPathConstPtrRef>& InPaths, const FAJCOffsetClipperConfig& Config, FAJCPathsRef& OutPaths)
+void UAJCBlueprintLibrary::OffsetClipMulti(const FAJCPathsRef& PathsRef, const FAJCOffsetClipperConfig& Config, FAJCPathsRef& OutPaths)
 {
     ClipperLib::ClipperOffset co(Config.MiterLimit, Config.ArcTolerance);
-
-    for (const FAJCPathConstPtrRef& PathPtrRef : InPaths)
-    {
-        if (PathPtrRef.IsValid())
-        {
-            const FAJCPathRef& PathRef(*PathPtrRef.Data);
-            co.AddPath(PathRef.Data, PathRef.GetJoinType(), PathRef.GetEndType());
-        }
-    }
-
+    co.AddPaths(PathsRef.Data, ClipperLib::jtSquare, ClipperLib::etClosedPolygon);
     co.Execute(OutPaths.Data, (float)FAJCUtils::ScaleToCInt(Config.Delta));
 }
 
@@ -251,10 +250,4 @@ int32 UAJCBlueprintLibrary::FindLargestVectorPath(const TArray<FAJCVectorPathRef
     }
 
     return LargestPathIndex;
-}
-
-void UAJCPathObject::VectorPathOffsetClip(const FAJCVectorPathRef& VectorPath, const FAJCOffsetClipperConfig& Config, EAJCJoinType JoinType, EAJCEndType EndType, bool bSimplifyPath)
-{
-    Paths.Reset();
-    Paths = UAJCBlueprintLibrary::VectorPathOffsetClip(VectorPath, Config, JoinType, EndType, bSimplifyPath);
 }

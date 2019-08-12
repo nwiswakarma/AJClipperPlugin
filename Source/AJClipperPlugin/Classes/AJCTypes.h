@@ -49,8 +49,10 @@
 typedef TArray<FVector2D>      FAJCVectorPath;
 typedef TArray<FAJCVectorPath> FAJCVectorPaths;
 
-typedef ClipperLib::Path  FAJCPointPath;
-typedef ClipperLib::Paths FAJCPointPaths;
+typedef ClipperLib::cInt     FAJCInt;
+typedef ClipperLib::IntPoint FAJCIntPoint;
+typedef ClipperLib::Path     FAJCPointPath;
+typedef ClipperLib::Paths    FAJCPointPaths;
 
 UENUM(BlueprintType)
 enum class EAJCClipType : uint8
@@ -166,12 +168,9 @@ struct AJCLIPPERPLUGIN_API FAJCPathRef
 {
 	GENERATED_BODY()
 
-    ClipperLib::Path Data;
+    FAJCPointPath Data;
 
     // Clipper config
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
-    EAJCPolyType PolyType = EAJCPolyType::PTSubject;
 
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
     bool bClosedPoly = true;
@@ -185,20 +184,6 @@ struct AJCLIPPERPLUGIN_API FAJCPathRef
     EAJCEndType EndType = EAJCEndType::ETClosedPolygon;
 
     // ClipperLib enum getter
-
-    ClipperLib::PolyType GetPolyType() const
-    {
-        switch (PolyType)
-        {
-            case EAJCPolyType::PTSubject:
-                return ClipperLib::ptSubject;
-            case EAJCPolyType::PTClip:
-                return ClipperLib::ptClip;
-
-            default:
-                return ClipperLib::ptSubject;
-        }
-    }
 
     ClipperLib::JoinType GetJoinType() const
     {
@@ -238,7 +223,7 @@ struct AJCLIPPERPLUGIN_API FAJCPathRef
 
     // Path utility functions
 
-    FORCEINLINE int32 GetPointCount() const
+    FORCEINLINE int32 Num() const
     {
         return Data.size();
     }
@@ -251,6 +236,19 @@ struct AJCLIPPERPLUGIN_API FAJCPathRef
     FORCEINLINE FAJCPathConstPtrRef AsConstPtr() const
     {
         return FAJCPathConstPtrRef(*this);
+    }
+
+    FORCEINLINE int32 FindPoint(const FAJCIntPoint& Point) const
+    {
+        for (int32 i=0; i<Num(); ++i)
+        {
+            if (Point == Data[i])
+            {
+                return i;
+            }
+        }
+
+        return -1;
     }
 };
 
@@ -271,29 +269,29 @@ class FAJCUtils
 {
 public:
 
-    FORCEINLINE static ClipperLib::cInt ScaleToCInt(float v)
+    FORCEINLINE static FAJCInt ScaleToCInt(float v)
     {
         return v < 0.f
-            ? static_cast<ClipperLib::cInt>(v*FAJCCONST_INT_SCALE - .5f)
-            : static_cast<ClipperLib::cInt>(v*FAJCCONST_INT_SCALE + .5f);
+            ? static_cast<FAJCInt>(v*FAJCCONST_INT_SCALE - .5f)
+            : static_cast<FAJCInt>(v*FAJCCONST_INT_SCALE + .5f);
     }
 
-    FORCEINLINE static float ScaleToFloat(ClipperLib::cInt v)
+    FORCEINLINE static float ScaleToFloat(FAJCInt v)
     {
         return static_cast<float>(v) * FAJCCONST_INT_SCALE_INV;
     }
 
-    FORCEINLINE static ClipperLib::IntPoint ScaleToCIntPoint(float X, float Y)
+    FORCEINLINE static FAJCIntPoint ScaleToCIntPoint(float X, float Y)
     {
-        return ClipperLib::IntPoint(ScaleToCInt(X), ScaleToCInt(Y));
+        return FAJCIntPoint(ScaleToCInt(X), ScaleToCInt(Y));
     }
 
-    FORCEINLINE static ClipperLib::IntPoint ScaleToCIntPoint(const FVector2D& v)
+    FORCEINLINE static FAJCIntPoint ScaleToCIntPoint(const FVector2D& v)
     {
         return ScaleToCIntPoint(v.X, v.Y);
     }
 
-    FORCEINLINE static void ScaleToCIntPoint(const TArray<FVector2D>& Vectors, ClipperLib::Path& Path)
+    FORCEINLINE static void ScaleToCIntPoint(const TArray<FVector2D>& Vectors, FAJCPointPath& Path)
     {
         Path.clear();
         Path.reserve(Vectors.Num());
@@ -301,20 +299,30 @@ public:
             Path << FAJCUtils::ScaleToCIntPoint(Point);
     }
 
-    FORCEINLINE static FVector2D ScaleToVector2D(ClipperLib::cInt X, ClipperLib::cInt Y)
+    FORCEINLINE static FVector2D ScaleToVector2D(FAJCInt X, FAJCInt Y)
     {
         return FVector2D(ScaleToFloat(X), ScaleToFloat(Y));
     }
 
-    FORCEINLINE static FVector2D ScaleToVector2D(const ClipperLib::IntPoint& pt)
+    FORCEINLINE static FVector2D ScaleToVector2D(const FAJCIntPoint& pt)
     {
         return ScaleToVector2D(pt.X, pt.Y);
     }
 
-    FORCEINLINE static void ScaleToVector2D(const ClipperLib::Path& Path, TArray<FVector2D>& Vectors)
+    FORCEINLINE static void ScaleToVector2D(const FAJCPointPath& Path, TArray<FVector2D>& Vectors)
     {
         Vectors.Reset(Path.size());
-        for (const ClipperLib::IntPoint& Point : Path)
+
+        for (const FAJCIntPoint& Point : Path)
+        {
             Vectors.Emplace(ScaleToFloat(Point.X), ScaleToFloat(Point.Y));
+        }
     }
 };
+
+FORCEINLINE uint32 GetTypeHash(const FAJCIntPoint& InPoint)
+{
+    int64 X = GetTypeHash(InPoint.X);
+    int64 Y = GetTypeHash(InPoint.Y);
+	return GetTypeHash(X | (Y<<32));
+}

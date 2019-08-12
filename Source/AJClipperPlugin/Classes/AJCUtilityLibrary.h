@@ -28,7 +28,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Kismet/BlueprintFunctionLibrary.h"
 #include "AJCTypes.h"
 
 class AJCLIPPERPLUGIN_API FAJCUtilityLibrary
@@ -81,11 +80,21 @@ public:
     // Path clip functions
 
     static void Clip(
+        FAJCPointPaths& Solution,
         const TArray<FAJCPathRef>& SubjectPathRefs,
         const TArray<FAJCPathRef>& ClipPathRefs,
         EAJCClipType ClipType,
         EAJCPolyFillType FillType,
-        FAJCPointPaths& Solution
+        bool bPreserveCollinear = false
+        );
+
+    static void Clip(
+        FAJCPointPaths& Solution,
+        const FAJCPathRef& SubjectPathRef,
+        const FAJCPathRef& ClipPathRef,
+        EAJCClipType ClipType,
+        EAJCPolyFillType FillType,
+        bool bPreserveCollinear = false
         );
 
     static void OffsetClip(const FAJCPathRef& PathRef, const FAJCOffsetClipperConfig& Config, FAJCPointPaths& Paths, const bool bSimplifyPath = true);

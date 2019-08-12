@@ -73,7 +73,8 @@ public:
     static void CreatePathsFromVectorPaths(const TArray<FAJCVectorPathRef>& InPaths, FAJCPathsRef& OutPaths);
 
     UFUNCTION(BlueprintCallable)
-    static TArray<FAJCVectorPathRef> VectorPathClip(
+    static void VectorPathClip(
+        TArray<FAJCVectorPathRef>& OutPaths,
         const TArray<FAJCVectorPathRef>& SubjectVectorPaths,
         const TArray<FAJCVectorPathRef>& ClipVectorPaths,
         EAJCClipType ClipType,
@@ -81,7 +82,8 @@ public:
         );
 
     UFUNCTION(BlueprintCallable)
-    static TArray<FAJCVectorPathRef> VectorPathOffsetClip(
+    static void VectorPathOffsetClip(
+        TArray<FAJCVectorPathRef>& OutPaths,
         const FAJCVectorPathRef& VectorPath,
         const FAJCOffsetClipperConfig& Config,
         EAJCJoinType JoinType,
@@ -90,7 +92,8 @@ public:
         );
 
     UFUNCTION(BlueprintCallable)
-    static TArray<FAJCVectorPathRef> VectorPathClipByOffset(
+    static void VectorPathClipByOffset(
+        TArray<FAJCVectorPathRef>& OutPaths,
         const FAJCVectorPathRef& VectorPath,
         const FAJCOffsetClipperConfig& Config,
         EAJCJoinType JoinType,
@@ -99,13 +102,10 @@ public:
         );
 
     UFUNCTION(BlueprintCallable, meta=(DisplayName="Offset Clip Single"))
-    static void OffsetClip1(const FAJCPathRef& PathRef, const FAJCOffsetClipperConfig& Config, FAJCPathsRef& OutPaths);
+    static void OffsetClipSingle(const FAJCPathRef& PathRef, const FAJCOffsetClipperConfig& Config, FAJCPathsRef& OutPaths);
 
     UFUNCTION(BlueprintCallable, meta=(DisplayName="Offset Clip Multi"))
-    static void OffsetClip2(const FAJCPathsRef& PathsRef, const FAJCOffsetClipperConfig& Config, FAJCPathsRef& OutPaths);
-
-    UFUNCTION(BlueprintCallable, meta=(DisplayName="Offset Clip Paths"))
-    static void OffsetClip(const TArray<FAJCPathConstPtrRef>& InPaths, const FAJCOffsetClipperConfig& Config, FAJCPathsRef& OutPaths);
+    static void OffsetClipMulti(const FAJCPathsRef& PathsRef, const FAJCOffsetClipperConfig& Config, FAJCPathsRef& OutPaths);
 
     UFUNCTION(BlueprintCallable)
     static int32 IsPointOnPolygon(const FVector2D& Point, const FAJCPathRef& InPath);
@@ -115,24 +115,4 @@ public:
 
     UFUNCTION(BlueprintCallable)
     static int32 FindLargestVectorPath(const TArray<FAJCVectorPathRef>& VectorPaths);
-};
-
-UCLASS(BlueprintType, Blueprintable)
-class AJCLIPPERPLUGIN_API UAJCPathObject : public UObject
-{
-	GENERATED_BODY()
-
-public:
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
-    TArray<FAJCVectorPathRef> Paths;
-
-    UFUNCTION(BlueprintCallable)
-    void VectorPathOffsetClip(
-        const FAJCVectorPathRef& VectorPath,
-        const FAJCOffsetClipperConfig& Config,
-        EAJCJoinType JoinType,
-        EAJCEndType EndType,
-        bool bSimplifyPath = true
-        );
 };
