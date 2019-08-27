@@ -128,7 +128,13 @@ void FAJCUtilityLibrary::Clip(
     c.Execute(GetClipType(ClipType), Solution, GetPolyFillType(FillType));
 }
 
-void FAJCUtilityLibrary::OffsetClip(const FAJCPathRef& PathRef, const FAJCOffsetClipperConfig& Config, FAJCPointPaths& Paths, const bool bSimplifyPath)
+void FAJCUtilityLibrary::OffsetClip(
+    FAJCPointPaths& Paths,
+    const FAJCPathRef& PathRef,
+    const FAJCOffsetClipperConfig& Config,
+    bool bSimplifyPath,
+    bool bReverseOutput
+    )
 {
     using namespace ClipperLib;
 
@@ -150,6 +156,12 @@ void FAJCUtilityLibrary::OffsetClip(const FAJCPathRef& PathRef, const FAJCOffset
     ClipperOffset co(Config.MiterLimit, Config.ArcTolerance);
     co.AddPaths(SourcePaths, PathRef.GetJoinType(), PathRef.GetEndType());
     co.Execute(Paths, (float) FAJCUtils::ScaleToCInt(Config.Delta));
+
+    // Reverse output if required
+    if (bReverseOutput)
+    {
+        ClipperLib::ReversePaths(Paths);
+    }
 }
 
 void FAJCUtilityLibrary::SimplifyPath(const FAJCPathRef& PathRef, FAJCPointPaths& OutPaths)

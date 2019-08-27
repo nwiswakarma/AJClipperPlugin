@@ -97,7 +97,13 @@ public:
         bool bPreserveCollinear = false
         );
 
-    static void OffsetClip(const FAJCPathRef& PathRef, const FAJCOffsetClipperConfig& Config, FAJCPointPaths& Paths, const bool bSimplifyPath = true);
+    static void OffsetClip(
+        FAJCPointPaths& Paths,
+        const FAJCPathRef& PathRef,
+        const FAJCOffsetClipperConfig& Config,
+        bool bSimplifyPath = true,
+        bool bReverseOutput = false
+        );
 
     // Path Utility functions
 

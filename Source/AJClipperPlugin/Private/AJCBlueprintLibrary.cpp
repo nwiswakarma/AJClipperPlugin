@@ -48,7 +48,7 @@ TArray<FAJCVectorPathRef> UAJCBlueprintLibrary::ConvertPointPathsToVectorPaths(c
 
 void UAJCBlueprintLibrary::CreateVectorPathsFromPaths(const FAJCPathsRef& InPaths, TArray<FAJCVectorPathRef>& OutPaths, bool bFlattenPaths)
 {
-    const ClipperLib::Paths& Paths(InPaths.Data);
+    const FAJCPointPaths& Paths(InPaths.Data);
     TArray<FAJCVectorPathRef> VectorPaths;
     int32 TotalPointCount = 0;
 
@@ -88,7 +88,7 @@ void UAJCBlueprintLibrary::CreatePathsFromVectorPaths(const TArray<FAJCVectorPat
     for (int32 i=0; i<InPaths.Num(); ++i)
     {
         const FAJCVectorPathRef& VectorPath(InPaths[i]);
-        ClipperLib::Path& Path(OutPaths.Data[i]);
+        FAJCPointPath& Path(OutPaths.Data[i]);
 
         for (const FVector2D& Point : VectorPath.Data)
         {
@@ -136,7 +136,8 @@ void UAJCBlueprintLibrary::VectorPathOffsetClip(
     const FAJCOffsetClipperConfig& Config,
     EAJCJoinType JoinType,
     EAJCEndType EndType,
-    bool bSimplifyPath
+    bool bSimplifyPath,
+    bool bReverseOutput
     )
 {
     FAJCPathRef PathRef;
@@ -146,7 +147,7 @@ void UAJCBlueprintLibrary::VectorPathOffsetClip(
     PathRef.EndType = EndType;
 
     FAJCPathsRef PathsRef;
-    FAJCUtilityLibrary::OffsetClip(PathRef, Config, PathsRef.Data, bSimplifyPath);
+    FAJCUtilityLibrary::OffsetClip(PathsRef.Data, PathRef, Config, bSimplifyPath, bReverseOutput);
 
     OutPaths.Reset();
     FAJCUtilityLibrary::ConvertPointPathsToVectorPaths(PathsRef.Data, OutPaths);
@@ -178,7 +179,7 @@ void UAJCBlueprintLibrary::VectorPathClipByOffset(
     SrcPathRef.EndType = EndType;
 
     FAJCPathsRef OffsetPathsRef;
-    FAJCUtilityLibrary::OffsetClip(SrcPathRef, Config, OffsetPathsRef.Data, bSimplifyPath);
+    FAJCUtilityLibrary::OffsetClip(OffsetPathsRef.Data, SrcPathRef, Config, bSimplifyPath);
 
     ClipPaths.SetNum(OffsetPathsRef.GetPathCount());
 
@@ -198,18 +199,28 @@ void UAJCBlueprintLibrary::VectorPathClipByOffset(
     FAJCUtilityLibrary::ConvertPointPathsToVectorPaths(SolutionRef.Data, OutPaths);
 }
 
-void UAJCBlueprintLibrary::OffsetClipSingle(const FAJCPathRef& PathRef, const FAJCOffsetClipperConfig& Config, FAJCPathsRef& OutPaths)
+void UAJCBlueprintLibrary::OffsetClipSingle(FAJCPathsRef& OutPaths, const FAJCPathRef& PathRef, const FAJCOffsetClipperConfig& Config, bool bReverseOutput)
 {
     ClipperLib::ClipperOffset co(Config.MiterLimit, Config.ArcTolerance);
     co.AddPath(PathRef.Data, PathRef.GetJoinType(), PathRef.GetEndType());
     co.Execute(OutPaths.Data, (float)FAJCUtils::ScaleToCInt(Config.Delta));
+
+    if (bReverseOutput)
+    {
+        ClipperLib::ReversePaths(OutPaths.Data);
+    }
 }
 
-void UAJCBlueprintLibrary::OffsetClipMulti(const FAJCPathsRef& PathsRef, const FAJCOffsetClipperConfig& Config, FAJCPathsRef& OutPaths)
+void UAJCBlueprintLibrary::OffsetClipMulti(FAJCPathsRef& OutPaths, const FAJCPathsRef& PathsRef, const FAJCOffsetClipperConfig& Config, bool bReverseOutput)
 {
     ClipperLib::ClipperOffset co(Config.MiterLimit, Config.ArcTolerance);
     co.AddPaths(PathsRef.Data, ClipperLib::jtSquare, ClipperLib::etClosedPolygon);
     co.Execute(OutPaths.Data, (float)FAJCUtils::ScaleToCInt(Config.Delta));
+
+    if (bReverseOutput)
+    {
+        ClipperLib::ReversePaths(OutPaths.Data);
+    }
 }
 
 int32 UAJCBlueprintLibrary::IsPointOnPolygon(const FVector2D& Point, const FAJCPathRef& InPath)
@@ -219,7 +230,7 @@ int32 UAJCBlueprintLibrary::IsPointOnPolygon(const FVector2D& Point, const FAJCP
 
 int32 UAJCBlueprintLibrary::IsPointOnPolygons(const FVector2D& Point, const FAJCPathsRef& InPaths)
 {
-    for (const ClipperLib::Path& Path : InPaths.Data)
+    for (const FAJCPointPath& Path : InPaths.Data)
     {
         int32 Result = ClipperLib::PointInPolygon(FAJCUtils::ScaleToCIntPoint(Point), Path);
 

@@ -88,7 +88,8 @@ public:
         const FAJCOffsetClipperConfig& Config,
         EAJCJoinType JoinType,
         EAJCEndType EndType,
-        bool bSimplifyPath = true
+        bool bSimplifyPath = true,
+        bool bReverseOutput = false
         );
 
     UFUNCTION(BlueprintCallable)
@@ -102,10 +103,10 @@ public:
         );
 
     UFUNCTION(BlueprintCallable, meta=(DisplayName="Offset Clip Single"))
-    static void OffsetClipSingle(const FAJCPathRef& PathRef, const FAJCOffsetClipperConfig& Config, FAJCPathsRef& OutPaths);
+    static void OffsetClipSingle(FAJCPathsRef& OutPaths, const FAJCPathRef& PathRef, const FAJCOffsetClipperConfig& Config, bool bReverseOutput);
 
     UFUNCTION(BlueprintCallable, meta=(DisplayName="Offset Clip Multi"))
-    static void OffsetClipMulti(const FAJCPathsRef& PathsRef, const FAJCOffsetClipperConfig& Config, FAJCPathsRef& OutPaths);
+    static void OffsetClipMulti(FAJCPathsRef& OutPaths, const FAJCPathsRef& PathsRef, const FAJCOffsetClipperConfig& Config, bool bReverseOutput);
 
     UFUNCTION(BlueprintCallable)
     static int32 IsPointOnPolygon(const FVector2D& Point, const FAJCPathRef& InPath);
