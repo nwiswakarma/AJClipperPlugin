@@ -70,6 +70,42 @@ public:
         }
     }
 
+    FORCEINLINE static ClipperLib::JoinType GetJoinType(EAJCJoinType JoinType)
+    {
+        switch (JoinType)
+        {
+            case EAJCJoinType::JTSquare:
+                return ClipperLib::jtSquare;
+            case EAJCJoinType::JTRound:
+                return ClipperLib::jtRound;
+            case EAJCJoinType::JTMiter:
+                return ClipperLib::jtMiter;
+
+            default:
+                return ClipperLib::jtSquare;
+        }
+    }
+
+    FORCEINLINE static ClipperLib::EndType GetEndType(EAJCEndType EndType)
+    {
+        switch (EndType)
+        {
+            case EAJCEndType::ETClosedPolygon:
+                return ClipperLib::etClosedPolygon;
+            case EAJCEndType::ETClosedLine:
+                return ClipperLib::etClosedLine;
+            case EAJCEndType::ETOpenButt:
+                return ClipperLib::etOpenButt;
+            case EAJCEndType::ETOpenSquare:
+                return ClipperLib::etOpenSquare;
+            case EAJCEndType::ETOpenRound:
+                return ClipperLib::etOpenRound;
+
+            default:
+                return ClipperLib::etClosedPolygon;
+        }
+    }
+
     // Path creation functions
 
     static void ConvertVectorPathToPointPath(const FAJCVectorPath& VectorPath, FAJCPathRef& PathRef);
@@ -105,9 +141,18 @@ public:
         bool bReverseOutput = false
         );
 
+    static void OffsetClip(
+        FAJCPointPaths& Paths,
+        const FAJCPointPaths& InPaths,
+        const FAJCOffsetClipperConfig& Config,
+        EAJCJoinType InJoinType,
+        EAJCEndType InEndType
+        );
+
     // Path Utility functions
 
     static void SimplifyPath(const FAJCPathRef& PathRef, FAJCPointPaths& OutPaths);
+    static void SimplifyPaths(FAJCPointPaths& OutPaths, const TArray<FAJCPathRef>& PathRefs, bool bPreserveCollinear = false);
 
     static int32 IsPointOnPolygon(const FVector2D& Point, const FAJCPointPath& InPath);
     static int32 IsPointOnPolygons(const FVector2D& Point, const FAJCPointPaths& InPaths);

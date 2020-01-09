@@ -78,7 +78,8 @@ public:
         const TArray<FAJCVectorPathRef>& SubjectVectorPaths,
         const TArray<FAJCVectorPathRef>& ClipVectorPaths,
         EAJCClipType ClipType,
-        EAJCPolyFillType FillType = EAJCPolyFillType::PFTEvenOdd
+        EAJCPolyFillType FillType = EAJCPolyFillType::PFTEvenOdd,
+        bool bPreserveCollinear = true
         );
 
     UFUNCTION(BlueprintCallable)

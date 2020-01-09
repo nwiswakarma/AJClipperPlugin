@@ -88,10 +88,7 @@ void FAJCUtilityLibrary::Clip(
 
     Clipper c;
 
-    if (bPreserveCollinear)
-    {
-        c.PreserveCollinear(true);
-    }
+    c.PreserveCollinear(bPreserveCollinear);
 
     for (int32 i=0; i<SubjectPathRefs.Num(); ++i)
     {
@@ -117,10 +114,7 @@ void FAJCUtilityLibrary::Clip(
 {
     ClipperLib::Clipper c;
 
-    if (bPreserveCollinear)
-    {
-        c.PreserveCollinear(true);
-    }
+    c.PreserveCollinear(bPreserveCollinear);
 
     c.AddPath(SubjectPathRef.Data, ClipperLib::ptSubject, SubjectPathRef.bClosedPoly);
     c.AddPath(ClipPathRef.Data, ClipperLib::ptClip, ClipPathRef.bClosedPoly);
@@ -164,6 +158,22 @@ void FAJCUtilityLibrary::OffsetClip(
     }
 }
 
+void FAJCUtilityLibrary::OffsetClip(
+    FAJCPointPaths& Paths,
+    const FAJCPointPaths& InPaths,
+    const FAJCOffsetClipperConfig& Config,
+    EAJCJoinType JoinType,
+    EAJCEndType EndType
+    )
+{
+    using namespace ClipperLib;
+
+    // Offset clip
+    ClipperOffset co(Config.MiterLimit, Config.ArcTolerance);
+    co.AddPaths(InPaths, GetJoinType(JoinType), GetEndType(EndType));
+    co.Execute(Paths, (float) FAJCUtils::ScaleToCInt(Config.Delta));
+}
+
 void FAJCUtilityLibrary::SimplifyPath(const FAJCPathRef& PathRef, FAJCPointPaths& OutPaths)
 {
     using namespace ClipperLib;
@@ -171,6 +181,26 @@ void FAJCUtilityLibrary::SimplifyPath(const FAJCPathRef& PathRef, FAJCPointPaths
     // Self union-clip to simplify clip
     Clipper c;
     c.AddPath(PathRef.Data, ptSubject, true);
+    c.Execute(ctUnion, OutPaths, pftEvenOdd, pftEvenOdd);
+}
+
+void FAJCUtilityLibrary::SimplifyPaths(FAJCPointPaths& OutPaths, const TArray<FAJCPathRef>& PathRefs, bool bPreserveCollinear)
+{
+    if (PathRefs.Num() < 1)
+    {
+        return;
+    }
+
+    using namespace ClipperLib;
+
+    // Self union-clip to simplify clip
+    Clipper c;
+    c.PreserveCollinear(bPreserveCollinear);
+    c.AddPath(PathRefs[0].Data, ptSubject, true);
+    for (int32 i=1; i<PathRefs.Num(); ++i)
+    {
+        c.AddPath(PathRefs[i].Data, ptClip, true);
+    }
     c.Execute(ctUnion, OutPaths, pftEvenOdd, pftEvenOdd);
 }
 

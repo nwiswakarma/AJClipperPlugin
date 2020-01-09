@@ -102,7 +102,8 @@ void UAJCBlueprintLibrary::VectorPathClip(
     const TArray<FAJCVectorPathRef>& SubjectVectorPaths,
     const TArray<FAJCVectorPathRef>& ClipVectorPaths,
     EAJCClipType ClipType,
-    EAJCPolyFillType FillType
+    EAJCPolyFillType FillType,
+    bool bPreserveCollinear
     )
 {
     TArray<FAJCPathRef> SubjectPaths;
@@ -124,7 +125,7 @@ void UAJCBlueprintLibrary::VectorPathClip(
     }
 
     FAJCPathsRef SolutionRef;
-    FAJCUtilityLibrary::Clip(SolutionRef.Data, SubjectPaths, ClipPaths, ClipType, FillType);
+    FAJCUtilityLibrary::Clip(SolutionRef.Data, SubjectPaths, ClipPaths, ClipType, FillType, bPreserveCollinear);
 
     OutPaths.Reset();
     FAJCUtilityLibrary::ConvertPointPathsToVectorPaths(SolutionRef.Data, OutPaths);
